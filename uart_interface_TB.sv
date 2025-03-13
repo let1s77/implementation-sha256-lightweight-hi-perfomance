@@ -19,44 +19,48 @@ module tb_sha256_memory();
         .msg_ready(msg_ready)
     );
 
-    // Clock 50MHz
     always #10 clk = ~clk;
 
+
+    task send_byte(input [7:0] data_byte);
+        data_in = data_byte;
+        data_valid = 1;
+        #20;  
+        data_valid = 0;
+        #20;
+    endtask
+
     initial begin
-        // Kh?i t?o
+      
         clk = 0;
         rst_n = 0;
         data_in = 8'b0;
         data_valid = 0;
         byte_stop = 0;
-        #20 rst_n = 1;
+        #20 rst_n = 1; // B? reset sau 20ns
 
-        // G?i kı t? "h" (ASCII 0x68 = 01101000)
-        data_in = 8'h68; data_valid = 1; #20;
-        data_valid = 0; #20;
+       
+        send_byte(8'h68);  // G?i "h" (0x68)
+        send_byte(8'h69);  // G?i "i" (0x69)
 
-        // G?i kı t? "i" (ASCII 0x69 = 01101001)
-        data_in = 8'h69; data_valid = 1; #20;
-        data_valid = 0; #20;
-
-        // K?t thúc nh?n d? li?u
+       
         #40 byte_stop = 1;
         #20 byte_stop = 0;
 
-        // Ch? x? lı xong
+        
         #100;
 
-        // Ki?m tra k?t qu?
+       //kiem tra
         if (msg_ready) begin
-            $display("? Test Passed: D? li?u nh?n ?úng!");
+            $display("? Test Passed: correct message");
             $display("Message Out: %h", message_out);
             if (message_out[511:496] == 8'h68 && message_out[495:488] == 8'h69) begin
-                $display("? Test Passed: \"hi\" ???c l?u ?úng trong b? nh?!");
+                $display("? Test Passed: \"hi\" Memory saved!");
             end else begin
-                $display("? Test Failed: \"hi\" không l?u ?úng!");
+                $display("? Test Failed: \"hi\" Non memory saved!");
             end
         end else begin
-            $display("? Test Failed: msg_ready ch?a kích ho?t!");
+            $display("? Test Failed: msg_ready non already!");
         end
 
         $stop;
